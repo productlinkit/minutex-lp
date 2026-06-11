@@ -2,26 +2,91 @@
 @tailwind components;
 @tailwind utilities;
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --background: 0 0% 100%;
+    --foreground: 217 46% 16%;
+    --card: 0 0% 100%;
+    --card-foreground: 217 46% 16%;
+    --primary: 222 92% 57%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 210 60% 96%;
+    --secondary-foreground: 217 46% 16%;
+    --muted: 210 40% 96%;
+    --muted-foreground: 218 14% 44%;
+    --accent: 210 60% 96%;
+    --accent-foreground: 217 46% 16%;
+    --border: 214 32% 91%;
+    --input: 214 32% 91%;
+    --ring: 222 92% 57%;
+    --radius: 0.9rem;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-ink font-sans antialiased;
+    -webkit-font-smoothing: antialiased;
   }
 }
 
-body {
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Sky gradient with soft cloud blooms used across hero / earning / CTA */
+  .sky-bg {
+    background:
+      radial-gradient(1200px 420px at 78% 8%, rgba(255, 255, 255, 0.9), transparent 60%),
+      radial-gradient(900px 380px at 12% 22%, rgba(255, 255, 255, 0.85), transparent 62%),
+      radial-gradient(1100px 520px at 50% 120%, rgba(255, 255, 255, 0.95), transparent 60%),
+      linear-gradient(180deg, #cfe3f7 0%, #dcebfb 22%, #eaf4fd 55%, #ffffff 100%);
+  }
+
+  .sky-bg-soft {
+    background: linear-gradient(180deg, #ffffff 0%, #eef5fd 45%, #dcebfb 100%);
+  }
+
+  .cloud {
+    position: absolute;
+    border-radius: 9999px;
+    background: radial-gradient(closest-side, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0));
+    filter: blur(8px);
+    pointer-events: none;
+  }
+
+  .text-gradient-blue {
+    background: linear-gradient(120deg, #2e6cf6, #5c92f8);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .glass-card {
+    background: rgba(255, 255, 255, 0.72);
+    backdrop-filter: blur(14px);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+  }
 }
 
 @layer utilities {
   .text-balance {
     text-wrap: balance;
   }
+
+  .reveal {
+    opacity: 0;
+    transform: translateY(28px);
+  }
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-thumb {
+  background: #c7d8ee;
+  border-radius: 9999px;
 }
