@@ -138,13 +138,13 @@ export function CaseStudies() {
           {cases.map((c, i) => (
             <article
               key={c.tag}
-              className="group relative h-[460px] w-[330px] shrink-0 overflow-hidden rounded-[2rem] shadow-card sm:w-[360px]"
+              className="group relative h-[460px] w-[330px] shrink-0 overflow-hidden rounded-[2rem] shadow-card sm:w-[360px] lg:w-[440px]"
             >
               <Image
                 src={c.img}
                 alt={`${c.tag} using MinuteX`}
                 fill
-                sizes="(max-width: 640px) 330px, 360px"
+                sizes="(max-width: 640px) 330px, (max-width: 1024px) 360px, 440px"
                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                 priority={i === 0}
               />

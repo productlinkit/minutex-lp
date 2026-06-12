@@ -41,6 +41,7 @@ export function SplineDevice({ className }: { className?: string }) {
       <SplineInner
         scene="https://prod.spline.design/qi0HJUmDijmJFzTC/scene.splinecode"
         className={className}
+        zoom={3.2}
       />
     </SplineBoundary>
   );

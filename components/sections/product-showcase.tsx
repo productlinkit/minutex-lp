@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
-import { Check, Hand, MousePointerClick, ZoomIn } from "lucide-react";
+import { Check, Hand, MousePointerClick, Tag, ZoomIn } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { SplineDevice } from "@/components/spline-device";
@@ -18,6 +18,8 @@ type PanelMeta = {
   desc: string;
   features: string[];
   cta: string;
+  /** Render the email waitlist flow instead of a plain CTA button. */
+  waitlist?: boolean;
 };
 
 const WEB: PanelMeta = {
@@ -61,7 +63,66 @@ const DEVICE: PanelMeta = {
     "Sync via Bluetooth or USB",
   ],
   cta: "Join the waitlist",
+  waitlist: true,
 };
+
+function WaitlistForm() {
+  const [open, setOpen] = useState(false);
+  const [email, setEmail] = useState("");
+  const [done, setDone] = useState(false);
+
+  // Front-end only flow: validates the email and confirms. Wire `email` to your
+  // signup API / list provider here when the backend is ready.
+  const submit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) setDone(true);
+  };
+
+  if (done) {
+    return (
+      <div className="mt-8 flex items-center gap-2.5 rounded-xl bg-brand-50 px-4 py-3 text-sm font-semibold text-brand">
+        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand text-white">
+          <Check className="h-3.5 w-3.5" strokeWidth={3} />
+        </span>
+        You&apos;re on the list — we&apos;ll email your 20% launch discount.
+      </div>
+    );
+  }
+
+  if (!open) {
+    return (
+      <Button className="mt-8 gap-2" onClick={() => setOpen(true)}>
+        Join the waitlist
+        <span className="flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-xs font-bold">
+          <Tag className="h-3 w-3" /> 20% off
+        </span>
+      </Button>
+    );
+  }
+
+  return (
+    <form onSubmit={submit} className="mt-8 max-w-md">
+      <div className="flex flex-col gap-3 sm:flex-row">
+        <input
+          type="email"
+          required
+          autoFocus
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          placeholder="you@company.com"
+          className="h-11 flex-1 rounded-xl border border-slate-200 bg-white px-4 text-sm text-ink outline-none transition-colors placeholder:text-ink-soft focus:border-brand focus:ring-2 focus:ring-brand/20"
+        />
+        <Button type="submit" className="h-11 shrink-0 gap-1.5">
+          <Tag className="h-4 w-4" /> Get 20% off
+        </Button>
+      </div>
+      <p className="mt-2.5 text-xs text-ink-soft">
+        Join the waitlist and we&apos;ll send an exclusive 20% launch discount.
+        No spam, unsubscribe anytime.
+      </p>
+    </form>
+  );
+}
 
 function PanelText({ meta }: { meta: PanelMeta }) {
   return (
@@ -85,7 +146,11 @@ function PanelText({ meta }: { meta: PanelMeta }) {
           </li>
         ))}
       </ul>
-      <Button className="mt-8">{meta.cta}</Button>
+      {meta.waitlist ? (
+        <WaitlistForm />
+      ) : (
+        <Button className="mt-8">{meta.cta}</Button>
+      )}
     </div>
   );
 }
@@ -107,7 +172,7 @@ export function ProductShowcase() {
           io.disconnect();
         }
       },
-      { rootMargin: "600px" }
+      { rootMargin: "600px" },
     );
     io.observe(el);
     return () => io.disconnect();
@@ -165,12 +230,12 @@ export function ProductShowcase() {
             .to(
               ".sc-web",
               { yPercent: -100, ease: "power3.inOut", duration: 0.03 },
-              0.3
+              0.3,
             )
             .to(
               ".sc-mobile",
               { yPercent: 0, ease: "power3.inOut", duration: 0.03 },
-              0.3
+              0.3,
             )
             // mobile video scrub
             .to(mp, { t: mobDur, ease: "none", duration: 0.3 }, 0.33)
@@ -178,12 +243,12 @@ export function ProductShowcase() {
             .to(
               ".sc-mobile",
               { yPercent: -100, ease: "power3.inOut", duration: 0.03 },
-              0.63
+              0.63,
             )
             .to(
               ".sc-device",
               { yPercent: 0, ease: "power3.inOut", duration: 0.03 },
-              0.63
+              0.63,
             )
             // device hold (room to interact with the 3D model)
             .to(".sc-device", { yPercent: 0, duration: 0.34 }, 0.66);
@@ -203,7 +268,7 @@ export function ProductShowcase() {
             : new Promise<void>((res) =>
                 v?.addEventListener("loadedmetadata", () => res(), {
                   once: true,
-                })
+                }),
               );
 
         Promise.all([ready(webV), ready(mobV)]).then(() => {
@@ -237,15 +302,14 @@ export function ProductShowcase() {
 
       return () => mm.revert();
     },
-    { scope: section }
+    { scope: section },
   );
 
   return (
     <section
       ref={section}
       id="product"
-      className="relative bg-white lg:h-[360vh]"
-    >
+      className="relative bg-white lg:h-[360vh]">
       <div className="lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden">
         {/* WEB */}
         <div className="sc-web sc-panel relative flex items-center py-24 lg:absolute lg:inset-0 lg:py-0">
@@ -294,8 +358,12 @@ export function ProductShowcase() {
                 <SplineDevice className="absolute inset-0 h-full w-full" />
               )}
 
+              {/* mask the "Built with Spline" watermark in the bottom-right
+                  corner; blends with the panel's gradient and blocks its link */}
+              <div className="absolute bottom-0 right-0 z-10 h-16 w-full rounded-br-[2rem] bg-slate-100" />
+
               {/* interaction hints */}
-              <div className="pointer-events-none absolute inset-x-0 bottom-4 flex flex-wrap items-center justify-center gap-2 px-4">
+              <div className="pointer-events-none absolute inset-x-0 bottom-4 z-20 flex flex-wrap items-center justify-center gap-2 px-4">
                 <span className="flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[11px] font-semibold text-ink shadow-soft backdrop-blur">
                   <Hand className="h-3.5 w-3.5 text-brand" /> Drag to rotate
                 </span>
@@ -303,8 +371,8 @@ export function ProductShowcase() {
                   <ZoomIn className="h-3.5 w-3.5 text-brand" /> Scroll to zoom
                 </span>
                 <span className="flex items-center gap-1.5 rounded-full bg-white/85 px-3 py-1.5 text-[11px] font-semibold text-ink shadow-soft backdrop-blur">
-                  <MousePointerClick className="h-3.5 w-3.5 text-brand" /> Click to
-                  explore
+                  <MousePointerClick className="h-3.5 w-3.5 text-brand" /> Click
+                  to explore
                 </span>
               </div>
             </div>

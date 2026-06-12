@@ -1,5 +1,4 @@
 import Image from "next/image";
-import { Apple, Play } from "lucide-react";
 
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
@@ -17,11 +16,15 @@ export function FinalCta() {
             action item — on web, mobile, or the MinuteX device.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Button variant="dark" size="lg">
-              <Apple className="h-5 w-5" /> App Store
-            </Button>
             <Button variant="light" size="lg">
-              <Play className="h-5 w-5 text-brand" /> Google Play
+              <Image
+                src="/icons/icon-playstore.png"
+                alt=""
+                width={20}
+                height={20}
+                className="h-5 w-5"
+              />
+              Google Play
             </Button>
           </div>
         </Reveal>

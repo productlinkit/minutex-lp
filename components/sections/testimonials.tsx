@@ -9,7 +9,7 @@ const testimonials = [
       "MinuteX changed how our team works. Everyone stays present while it captures every decision — and the recap lands before we even leave the room.",
     name: "Emery George",
     role: "Product Manager, Lumen",
-    initials: "EG",
+    photo: "https://randomuser.me/api/portraits/men/32.jpg",
     featured: false,
   },
   {
@@ -17,7 +17,7 @@ const testimonials = [
       "I've tried every notetaker out there and nothing comes close. Transcripts are accurate, speaker labels are spot on, and it just works automatically.",
     name: "Grayson Carter",
     role: "Engineering Lead, Northwind",
-    initials: "GC",
+    photo: "https://randomuser.me/api/portraits/men/76.jpg",
     featured: true,
   },
   {
@@ -25,9 +25,18 @@ const testimonials = [
       "From client calls to in-person workshops, MinuteX captures it all. Our notes are finally consistent, searchable, and shared in seconds.",
     name: "Karen Mitchell",
     role: "Operations Director, Brightpath",
-    initials: "KM",
+    photo: "https://randomuser.me/api/portraits/women/65.jpg",
     featured: false,
   },
+];
+
+// Faces for the trust-row avatar stack.
+const trustPhotos = [
+  "https://randomuser.me/api/portraits/women/44.jpg",
+  "https://randomuser.me/api/portraits/men/32.jpg",
+  "https://randomuser.me/api/portraits/women/65.jpg",
+  "https://randomuser.me/api/portraits/men/52.jpg",
+  "https://randomuser.me/api/portraits/women/90.jpg",
 ];
 
 function Stars({ className }: { className?: string }) {
@@ -62,13 +71,14 @@ export function Testimonials() {
           {/* trust row */}
           <div className="mt-7 flex items-center gap-3">
             <div className="flex -space-x-3">
-              {["EG", "GC", "KM", "AL", "RS"].map((i) => (
-                <span
-                  key={i}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#f6f8fc] bg-gradient-to-br from-brand-300 to-brand-600 text-[10px] font-bold text-white"
-                >
-                  {i}
-                </span>
+              {trustPhotos.map((src) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={src}
+                  src={src}
+                  alt=""
+                  className="h-9 w-9 rounded-full border-2 border-[#f6f8fc] object-cover"
+                />
               ))}
             </div>
             <div className="text-left">
@@ -117,16 +127,15 @@ export function Testimonials() {
                   t.featured ? "border-white/20" : "border-slate-100"
                 )}
               >
-                <span
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={t.photo}
+                  alt={t.name}
                   className={cn(
-                    "flex h-11 w-11 items-center justify-center rounded-full text-xs font-bold ring-2",
-                    t.featured
-                      ? "bg-white/15 text-white ring-white/30"
-                      : "bg-gradient-to-br from-brand-300 to-brand-600 text-white ring-brand-100"
+                    "h-11 w-11 rounded-full object-cover ring-2",
+                    t.featured ? "ring-white/40" : "ring-brand-100"
                   )}
-                >
-                  {t.initials}
-                </span>
+                />
                 <div className="leading-tight">
                   <p
                     className={cn(

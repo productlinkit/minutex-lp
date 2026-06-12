@@ -16,7 +16,6 @@ import {
   type LucideIcon,
 } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 gsap.registerPlugin(ScrollTrigger);
@@ -249,9 +248,6 @@ export function ProblemSolution() {
             We turn every meeting into <Hl>clear minutes</Hl> so your team always
             knows <Hl>what was decided</Hl> and what happens next.
           </p>
-          <Button variant="outline" className="mt-4">
-            Read More
-          </Button>
         </div>
       </div>
     </section>
