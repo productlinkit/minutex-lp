@@ -1,7 +1,6 @@
 import Image from "next/image";
 
 import { Reveal } from "@/components/reveal";
-import { Button } from "@/components/ui/button";
 
 export function FinalCta() {
   return (
@@ -16,16 +15,27 @@ export function FinalCta() {
             action item — on web, mobile, or the MinuteX device.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
-            <Button variant="light" size="lg">
+            <a
+              href="#"
+              aria-label="Get it on Google Play"
+              className="inline-flex items-center gap-3 rounded-xl bg-ink px-5 py-2.5 text-white transition-transform hover:-translate-y-0.5"
+            >
               <Image
                 src="/icons/icon-playstore.png"
                 alt=""
-                width={20}
-                height={20}
-                className="h-5 w-5"
+                width={26}
+                height={26}
+                className="h-[26px] w-[26px]"
               />
-              Google Play
-            </Button>
+              <span className="flex flex-col items-start leading-none">
+                <span className="text-[10px] font-medium uppercase tracking-wide">
+                  Get it on
+                </span>
+                <span className="text-lg font-semibold leading-tight">
+                  Google Play
+                </span>
+              </span>
+            </a>
           </div>
         </Reveal>
 

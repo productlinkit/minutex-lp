@@ -10,7 +10,12 @@ import { Button } from "@/components/ui/button";
 
 gsap.registerPlugin(ScrollTrigger);
 
-const WORD = "MINUTEX";
+// Hero headline, split into lines → words so each word can rise in and be
+// masked by its line wrapper.
+const TITLE_LINES = [
+  ["Stay", "present."],
+  ["We'll", "take", "notes."],
+];
 
 export function Hero() {
   const root = useRef<HTMLDivElement>(null);
@@ -39,13 +44,46 @@ export function Hero() {
         stagger: 0.12,
       });
 
+      // On load the video auto-plays from 0 up to this fraction of its length,
+      // so the hero isn't empty on first visit. After that (or once the user
+      // scrolls) the scroll position drives the rest of the video.
+      const INTRO_FRACTION = 0.5;
+
       let raf = 0;
       const triggers: ScrollTrigger[] = [];
       let onMeta: (() => void) | null = null;
+      let onIntro: (() => void) | null = null;
 
       const build = () => {
         const duration = video.duration || 1;
-        let target = 0; // where scroll wants the video to be
+        const introEnd = duration * INTRO_FRACTION;
+        let introDone = false;
+        let target = introEnd; // scroll picks up where the intro left off
+
+        // ---- Intro autoplay: play 0 → introEnd at a faster rate so the laptop
+        // appears quickly, then hand off to scroll.
+        const INTRO_SPEED = 2.5;
+        const finishIntro = () => {
+          if (introDone) return;
+          introDone = true;
+          video.pause();
+          video.playbackRate = 1;
+        };
+        onIntro = () => {
+          if (!introDone && video.currentTime >= introEnd) {
+            video.currentTime = introEnd;
+            finishIntro();
+          }
+        };
+        try {
+          video.currentTime = 0;
+        } catch {
+          /* not seekable yet */
+        }
+        video.playbackRate = INTRO_SPEED;
+        video.addEventListener("timeupdate", onIntro);
+        // If autoplay is blocked, just hand straight over to scroll control.
+        video.play().catch(() => finishIntro());
 
         triggers.push(
           ScrollTrigger.create({
@@ -54,7 +92,9 @@ export function Hero() {
             end: "bottom bottom",
             scrub: 0.4, // ease the target so motion stays smooth
             onUpdate: (self) => {
-              target = self.progress * duration;
+              target = introEnd + self.progress * (duration - introEnd);
+              // Any real scroll cancels the intro and lets scroll take over.
+              if (self.progress > 0.001) finishIntro();
             },
           })
         );
@@ -73,10 +113,11 @@ export function Hero() {
         });
         if (fade.scrollTrigger) triggers.push(fade.scrollTrigger);
 
-        // rAF loop: when the decoder is idle, seek straight to the (already
-        // eased) target. One seek lands exactly on target — no trailing lag.
+        // rAF loop: once the intro is done, seek straight to the (already
+        // eased) target whenever the decoder is idle. During the intro we let
+        // the video play freely instead of seeking.
         const tick = () => {
-          if (video.readyState >= 2 && !video.seeking) {
+          if (introDone && video.readyState >= 2 && !video.seeking) {
             if (Math.abs(target - video.currentTime) > 1 / 48) {
               video.currentTime = target;
             }
@@ -97,6 +138,7 @@ export function Hero() {
         cancelAnimationFrame(raf);
         triggers.forEach((t) => t.kill());
         if (onMeta) video.removeEventListener("loadedmetadata", onMeta);
+        if (onIntro) video.removeEventListener("timeupdate", onIntro);
       };
     },
     { scope: root }
@@ -116,16 +158,23 @@ export function Hero() {
         />
 
         {/* content: MINUTEX left (dark) — paragraph + CTA right */}
-        <div className="hero-content container relative z-10 flex h-full flex-col justify-start pt-28 sm:pt-32">
+        <div className="hero-content container relative z-10 flex h-full flex-col justify-start pt-20 sm:pt-24">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-start lg:justify-between">
-            <h1 className="hero-title overflow-hidden text-ink">
-              <span className="block text-[20vw] font-extrabold leading-[0.85] tracking-tight sm:text-[16vw] lg:text-[11vw]">
-                {WORD.split("").map((c, i) => (
-                  <span key={i} className="hero-letter inline-block">
-                    {c}
+            <h1 className="hero-title text-ink">
+              {TITLE_LINES.map((line, li) => (
+                <span key={li} className="block overflow-hidden pb-[0.08em]">
+                  <span className="block text-[12vw] font-extrabold leading-[0.95] tracking-tight sm:text-[9vw] lg:text-[5.5rem]">
+                    {line.map((w, wi) => (
+                      <span
+                        key={wi}
+                        className="hero-letter mr-[0.22em] inline-block"
+                      >
+                        {w}
+                      </span>
+                    ))}
                   </span>
-                ))}
-              </span>
+                </span>
+              ))}
             </h1>
 
             <div className="hero-anim max-w-xs lg:pt-4">
