@@ -1,94 +1,29 @@
 "use client";
 
 import { useState } from "react";
-import { Check } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowRight, Check } from "lucide-react";
 
 import { Reveal } from "@/components/reveal";
 import { Button } from "@/components/ui/button";
+import { plans, type Plan } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
-type Tier = {
-  name: string;
-  desc: string;
-  /** price by billing period; one-time tiers ignore the toggle */
-  monthly: string;
-  yearly: string;
-  period: string;
-  note?: string;
-  features: string[];
-  cta: string;
-  variant: "outline" | "default";
-  highlight?: boolean;
-  badge?: string;
-};
-
-const tiers: Tier[] = [
-  {
-    name: "Free",
-    desc: "For trying things out",
-    monthly: "Rp 0",
-    yearly: "Rp 0",
-    period: "forever",
-    features: ["300 minutes / month", "Web + Mobile apps", "Basic AI summary"],
-    cta: "Get started",
-    variant: "outline",
-  },
-  {
-    name: "Pro",
-    desc: "For power users",
-    monthly: "Rp 149K",
-    yearly: "Rp 119K",
-    period: "/month",
-    note: "per month, billed yearly",
-    features: [
-      "Unlimited minutes",
-      "All AI features",
-      "Integrations",
-      "Priority support",
-    ],
-    cta: "Start free trial",
-    variant: "default",
-    highlight: true,
-    badge: "Most popular",
-  },
-  {
-    name: "Business",
-    desc: "For growing teams",
-    monthly: "Rp 299K",
-    yearly: "Rp 239K",
-    period: "/user/month",
-    features: [
-      "Everything in Pro",
-      "Admin console",
-      "SSO / SAML",
-      "Custom retention",
-    ],
-    cta: "Contact sales",
-    variant: "outline",
-  },
-  {
-    name: "Device Bundle",
-    desc: "Hardware + software",
-    monthly: "Rp 2.8jt",
-    yearly: "Rp 2.8jt",
-    period: "one-time",
-    note: "+ Pro plan for 1 year",
-    features: [
-      "Physical MinuteX device",
-      "Pro plan for 1 year",
-      "Priority shipping",
-    ],
-    cta: "Pre-order",
-    variant: "outline",
-  },
-];
-
-function PlanCard({ tier, yearly }: { tier: Tier; yearly: boolean }) {
+function PlanCard({
+  tier,
+  yearly,
+  onSelect,
+}: {
+  tier: Plan;
+  yearly: boolean;
+  onSelect: (tier: Plan) => void;
+}) {
   const isOneTime = tier.period === "one-time";
   const price = yearly ? tier.yearly : tier.monthly;
   const discounted = yearly && tier.yearly !== tier.monthly;
-  const showNote =
-    tier.note && (isOneTime || (yearly && tier.name === "Pro"));
+  const showNote = tier.note && (isOneTime || discounted);
+  const isPaid = price !== "Rp 0";
 
   return (
     <div
@@ -123,11 +58,7 @@ function PlanCard({ tier, yearly }: { tier: Tier; yearly: boolean }) {
         {showNote ? tier.note : ""}
       </p>
 
-      <Button variant={tier.variant} className="mt-5 w-full">
-        {tier.cta}
-      </Button>
-
-      <ul className="mt-6 space-y-3">
+      <ul className="mt-6 flex-1 space-y-3">
         {tier.features.map((f) => (
           <li key={f} className="flex items-start gap-2.5 text-[13px] text-ink">
             <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-brand-50 text-brand">
@@ -137,12 +68,28 @@ function PlanCard({ tier, yearly }: { tier: Tier; yearly: boolean }) {
           </li>
         ))}
       </ul>
+
+      <Button
+        variant={tier.variant}
+        className="mt-6 w-full"
+        onClick={isPaid ? () => onSelect(tier) : undefined}
+      >
+        {tier.cta}
+      </Button>
     </div>
   );
 }
 
 export function Pricing() {
   const [yearly, setYearly] = useState(true); // yearly is the default
+  const router = useRouter();
+
+  const goToCheckout = (tier: Plan) => {
+    const billing = tier.oneTime ? "once" : yearly ? "yearly" : "monthly";
+    router.push(
+      `/checkout?plan=${encodeURIComponent(tier.name)}&billing=${billing}`
+    );
+  };
 
   return (
     <section id="pricing" className="relative bg-white py-20 sm:py-28">
@@ -183,12 +130,27 @@ export function Pricing() {
 
         <Reveal
           stagger
-          className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4"
+          className="mt-14 grid grid-cols-1 gap-5 sm:grid-cols-2 lg:mx-auto lg:max-w-4xl lg:grid-cols-3"
         >
-          {tiers.map((tier) => (
-            <PlanCard key={tier.name} tier={tier} yearly={yearly} />
+          {plans.map((tier) => (
+            <PlanCard
+              key={tier.name}
+              tier={tier}
+              yearly={yearly}
+              onSelect={goToCheckout}
+            />
           ))}
         </Reveal>
+
+        <div className="mt-10 text-center">
+          <Link
+            href="/pricing"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-brand transition-colors hover:text-brand-600"
+          >
+            Compare all plans &amp; features
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </div>
       </div>
     </section>
   );

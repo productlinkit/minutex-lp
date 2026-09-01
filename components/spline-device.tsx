@@ -35,13 +35,20 @@ class SplineBoundary extends Component<
   }
 }
 
-export function SplineDevice({ className }: { className?: string }) {
+export function SplineDevice({
+  className,
+  zoom = 3.2,
+}: {
+  className?: string;
+  /** Camera zoom; higher = the device appears larger. */
+  zoom?: number;
+}) {
   return (
     <SplineBoundary fallback={null}>
       <SplineInner
         scene="https://prod.spline.design/qi0HJUmDijmJFzTC/scene.splinecode"
         className={className}
-        zoom={3.2}
+        zoom={zoom}
       />
     </SplineBoundary>
   );

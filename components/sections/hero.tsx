@@ -1,12 +1,14 @@
 "use client";
 
 import { useRef } from "react";
+import Image from "next/image";
 import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { useGSAP } from "@gsap/react";
 import { ArrowDown } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Reveal } from "@/components/reveal";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -23,137 +25,187 @@ export function Hero() {
 
   useGSAP(
     () => {
-      const video = videoRef.current;
-      if (!video) return;
+      const mm = gsap.matchMedia();
 
-      // Intro: heading letters rise in, right column fades up.
-      gsap.from(".hero-letter", {
-        yPercent: 120,
-        opacity: 0,
-        duration: 1,
-        ease: "power4.out",
-        stagger: 0.05,
-        delay: 0.15,
-      });
-      gsap.from(".hero-anim", {
-        opacity: 0,
-        y: 24,
-        duration: 1,
-        ease: "power3.out",
-        delay: 0.5,
-        stagger: 0.12,
-      });
+      // The scroll-scrubbed video hero only runs on desktop. On mobile we show
+      // a static phone-frame hero instead (no pin, no scrubbing).
+      mm.add("(min-width: 1024px)", () => {
+        const video = videoRef.current;
+        if (!video) return;
 
-      // On load the video auto-plays from 0 up to this fraction of its length,
-      // so the hero isn't empty on first visit. After that (or once the user
-      // scrolls) the scroll position drives the rest of the video.
-      const INTRO_FRACTION = 0.5;
+        // The <video> ships with preload="none" so mobile (which shows a static
+        // image hero instead) never downloads this ~8 MB file. Only here, on
+        // desktop, do we actually begin loading it.
+        video.preload = "auto";
+        video.load();
 
-      let raf = 0;
-      const triggers: ScrollTrigger[] = [];
-      let onMeta: (() => void) | null = null;
-      let onIntro: (() => void) | null = null;
-
-      const build = () => {
-        const duration = video.duration || 1;
-        const introEnd = duration * INTRO_FRACTION;
-        let introDone = false;
-        let target = introEnd; // scroll picks up where the intro left off
-
-        // ---- Intro autoplay: play 0 → introEnd at a faster rate so the laptop
-        // appears quickly, then hand off to scroll.
-        const INTRO_SPEED = 2.5;
-        const finishIntro = () => {
-          if (introDone) return;
-          introDone = true;
-          video.pause();
-          video.playbackRate = 1;
-        };
-        onIntro = () => {
-          if (!introDone && video.currentTime >= introEnd) {
-            video.currentTime = introEnd;
-            finishIntro();
-          }
-        };
-        try {
-          video.currentTime = 0;
-        } catch {
-          /* not seekable yet */
-        }
-        video.playbackRate = INTRO_SPEED;
-        video.addEventListener("timeupdate", onIntro);
-        // If autoplay is blocked, just hand straight over to scroll control.
-        video.play().catch(() => finishIntro());
-
-        triggers.push(
-          ScrollTrigger.create({
-            trigger: root.current,
-            start: "top top",
-            end: "bottom bottom",
-            scrub: 0.4, // ease the target so motion stays smooth
-            onUpdate: (self) => {
-              target = introEnd + self.progress * (duration - introEnd);
-              // Any real scroll cancels the intro and lets scroll take over.
-              if (self.progress > 0.001) finishIntro();
-            },
-          })
-        );
-
-        // Fade the hero content out over the first part of the scroll.
-        const fade = gsap.to(".hero-content", {
+        // Intro: heading letters rise in, right column fades up.
+        gsap.from(".hero-letter", {
+          yPercent: 120,
           opacity: 0,
-          y: -40,
-          ease: "none",
-          scrollTrigger: {
-            trigger: root.current,
-            start: "top top",
-            end: "38% top",
-            scrub: true,
-          },
+          duration: 1,
+          ease: "power4.out",
+          stagger: 0.05,
+          delay: 0.15,
         });
-        if (fade.scrollTrigger) triggers.push(fade.scrollTrigger);
+        gsap.from(".hero-anim", {
+          opacity: 0,
+          y: 24,
+          duration: 1,
+          ease: "power3.out",
+          delay: 0.5,
+          stagger: 0.12,
+        });
 
-        // rAF loop: once the intro is done, seek straight to the (already
-        // eased) target whenever the decoder is idle. During the intro we let
-        // the video play freely instead of seeking.
-        const tick = () => {
-          if (introDone && video.readyState >= 2 && !video.seeking) {
-            if (Math.abs(target - video.currentTime) > 1 / 48) {
-              video.currentTime = target;
+        // On load the video auto-plays from 0 up to this fraction of its
+        // length, so the hero isn't empty on first visit. After that (or once
+        // the user scrolls) the scroll position drives the rest of the video.
+        const INTRO_FRACTION = 0.5;
+
+        let raf = 0;
+        const triggers: ScrollTrigger[] = [];
+        let onMeta: (() => void) | null = null;
+        let onIntro: (() => void) | null = null;
+
+        const build = () => {
+          const duration = video.duration || 1;
+          const introEnd = duration * INTRO_FRACTION;
+          let introDone = false;
+          let target = introEnd; // scroll picks up where the intro left off
+
+          // Intro autoplay: play 0 → introEnd at a faster rate so the laptop
+          // appears quickly, then hand off to scroll.
+          const INTRO_SPEED = 2.5;
+          const finishIntro = () => {
+            if (introDone) return;
+            introDone = true;
+            video.pause();
+            video.playbackRate = 1;
+          };
+          onIntro = () => {
+            if (!introDone && video.currentTime >= introEnd) {
+              video.currentTime = introEnd;
+              finishIntro();
             }
+          };
+          try {
+            video.currentTime = 0;
+          } catch {
+            /* not seekable yet */
           }
+          video.playbackRate = INTRO_SPEED;
+          video.addEventListener("timeupdate", onIntro);
+          // If autoplay is blocked, hand straight over to scroll control.
+          video.play().catch(() => finishIntro());
+
+          triggers.push(
+            ScrollTrigger.create({
+              trigger: root.current,
+              start: "top top",
+              end: "bottom bottom",
+              scrub: 0.4,
+              onUpdate: (self) => {
+                target = introEnd + self.progress * (duration - introEnd);
+                if (self.progress > 0.001) finishIntro();
+              },
+            })
+          );
+
+          // Fade the hero content out over the first part of the scroll.
+          const fade = gsap.to(".hero-content", {
+            opacity: 0,
+            y: -40,
+            ease: "none",
+            scrollTrigger: {
+              trigger: root.current,
+              start: "top top",
+              end: "38% top",
+              scrub: true,
+            },
+          });
+          if (fade.scrollTrigger) triggers.push(fade.scrollTrigger);
+
+          const tick = () => {
+            if (introDone && video.readyState >= 2 && !video.seeking) {
+              if (Math.abs(target - video.currentTime) > 1 / 48) {
+                video.currentTime = target;
+              }
+            }
+            raf = requestAnimationFrame(tick);
+          };
           raf = requestAnimationFrame(tick);
+          ScrollTrigger.refresh();
         };
-        raf = requestAnimationFrame(tick);
-        ScrollTrigger.refresh();
-      };
 
-      if (video.readyState >= 1) build();
-      else {
-        onMeta = () => build();
-        video.addEventListener("loadedmetadata", onMeta, { once: true });
-      }
+        if (video.readyState >= 1) build();
+        else {
+          onMeta = () => build();
+          video.addEventListener("loadedmetadata", onMeta, { once: true });
+        }
 
-      return () => {
-        cancelAnimationFrame(raf);
-        triggers.forEach((t) => t.kill());
-        if (onMeta) video.removeEventListener("loadedmetadata", onMeta);
-        if (onIntro) video.removeEventListener("timeupdate", onIntro);
-      };
+        return () => {
+          cancelAnimationFrame(raf);
+          triggers.forEach((t) => t.kill());
+          if (onMeta) video.removeEventListener("loadedmetadata", onMeta);
+          if (onIntro) video.removeEventListener("timeupdate", onIntro);
+        };
+      });
+
+      return () => mm.revert();
     },
     { scope: root }
   );
 
   return (
-    <section id="home" ref={root} className="relative h-[260vh] bg-[#d7e8fa]">
-      {/* sticky stage keeps the video pinned while we scroll through the section */}
-      <div className="hero-stage sticky top-0 h-screen w-full overflow-hidden">
+    <section
+      id="home"
+      ref={root}
+      className="relative bg-[#d7e8fa] lg:h-[260vh]"
+    >
+      {/* ---------- MOBILE: static phone-frame hero on a cloud sky ---------- */}
+      <div className="relative overflow-hidden lg:hidden">
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/images/bg-footer.webp')" }}
+        />
+        <div className="absolute inset-0 bg-white/25" />
+
+        <div className="container relative z-10 flex flex-col items-center pb-14 pt-28 text-center sm:pt-32">
+          <Reveal stagger className="flex flex-col items-center">
+            <h1 className="text-4xl font-extrabold leading-[1.05] tracking-tight text-ink sm:text-5xl">
+              Stay present.
+              <br />
+              We&apos;ll take notes.
+            </h1>
+            <p className="mt-4 max-w-sm text-[15px] font-medium leading-relaxed text-ink/75">
+              MinuteX turns every meeting into clear, shareable minutes —
+              automatically, in seconds.
+            </p>
+            <Button variant="light" className="mt-6">
+              Get Started
+            </Button>
+          </Reveal>
+
+          <Reveal scale className="mt-12">
+            <Image
+              src="/images/iphone-mom.png"
+              alt="MinuteX app recording a live session"
+              width={320}
+              height={664}
+              className="h-auto w-[240px] drop-shadow-2xl sm:w-[280px]"
+            />
+          </Reveal>
+        </div>
+      </div>
+
+      {/* ---------- DESKTOP: scroll-scrubbed video hero ---------- */}
+      <div className="hero-stage sticky top-0 hidden h-screen w-full overflow-hidden lg:block">
         <video
           ref={videoRef}
           src="/video/hero-hd.mp4"
           muted
           playsInline
-          preload="auto"
+          preload="none"
           className="absolute inset-0 h-full w-full object-cover"
         />
 
@@ -179,7 +231,7 @@ export function Hero() {
 
             <div className="hero-anim max-w-xs lg:pt-4">
               <p className="text-[15px] font-medium leading-relaxed text-ink/75">
-                Minutex turns every meeting into clear, shareable minutes —
+                MinuteX turns every meeting into clear, shareable minutes —
                 automatically, in seconds.
               </p>
               <Button variant="light" className="mt-5">

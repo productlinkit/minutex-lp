@@ -159,7 +159,20 @@ export function ProductShowcase() {
   const section = useRef<HTMLElement>(null);
   const webRef = useRef<HTMLVideoElement>(null);
   const mobRef = useRef<HTMLVideoElement>(null);
+  const deviceRef = useRef<HTMLDivElement>(null);
   const [showSpline, setShowSpline] = useState(false);
+
+  // While the pointer is over the 3D device, the wheel should drive the model
+  // (Spline zoom) instead of scrolling the page — so swallow the page scroll.
+  useEffect(() => {
+    const el = deviceRef.current;
+    if (!el) return;
+    const onWheel = (e: WheelEvent) => {
+      if (window.matchMedia("(min-width: 1024px)").matches) e.preventDefault();
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, []);
 
   // Lazy-mount the Spline scene only once the section approaches the viewport.
   useEffect(() => {
@@ -218,40 +231,41 @@ export function ProductShowcase() {
             },
           });
 
-          // Three equal "scrub / hold" windows with a very short slide-up
-          // between them, so each switch reads as instant — you never rest in
-          // a half-transition.
+          // Web + mobile get long scrub windows (their videos play with
+          // scroll). The device is a 3D model — nothing to scrub — so it just
+          // slides in near the end with a short settle, then the section
+          // unpins and normal scrolling continues straight through.
           tl.set(".sc-web", { yPercent: 0, autoAlpha: 1 }, 0)
             .set(".sc-mobile", { yPercent: 100, autoAlpha: 1 }, 0)
             .set(".sc-device", { yPercent: 100, autoAlpha: 1 }, 0)
             // web video scrub
-            .to(wp, { t: webDur, ease: "none", duration: 0.3 }, 0)
+            .to(wp, { t: webDur, ease: "none", duration: 0.4 }, 0)
             // web -> mobile (snappy slide up)
             .to(
               ".sc-web",
               { yPercent: -100, ease: "power3.inOut", duration: 0.03 },
-              0.3,
+              0.4,
             )
             .to(
               ".sc-mobile",
               { yPercent: 0, ease: "power3.inOut", duration: 0.03 },
-              0.3,
+              0.4,
             )
             // mobile video scrub
-            .to(mp, { t: mobDur, ease: "none", duration: 0.3 }, 0.33)
+            .to(mp, { t: mobDur, ease: "none", duration: 0.4 }, 0.43)
             // mobile -> device (snappy slide up)
             .to(
               ".sc-mobile",
               { yPercent: -100, ease: "power3.inOut", duration: 0.03 },
-              0.63,
+              0.83,
             )
             .to(
               ".sc-device",
               { yPercent: 0, ease: "power3.inOut", duration: 0.03 },
-              0.63,
+              0.83,
             )
-            // device hold (room to interact with the 3D model)
-            .to(".sc-device", { yPercent: 0, duration: 0.34 }, 0.66);
+            // short device settle, then the pin releases and scroll flows on
+            .to(".sc-device", { yPercent: 0, duration: 0.14 }, 0.86);
 
           const tick = () => {
             seekIdle(webV, wp.t);
@@ -309,7 +323,7 @@ export function ProductShowcase() {
     <section
       ref={section}
       id="product"
-      className="relative bg-white lg:h-[360vh]">
+      className="relative bg-white lg:h-[280vh]">
       <div className="lg:sticky lg:top-0 lg:h-screen lg:overflow-hidden">
         {/* WEB */}
         <div className="sc-web sc-panel relative flex items-center py-24 lg:absolute lg:inset-0 lg:py-0">
@@ -322,7 +336,7 @@ export function ProductShowcase() {
                   src="/video/desktop-mom-hd.mp4"
                   muted
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   className="aspect-square w-full bg-slate-50 object-cover"
                 />
               </div>
@@ -341,7 +355,7 @@ export function ProductShowcase() {
                   src="/video/mobile-mom-hd.mp4"
                   muted
                   playsInline
-                  preload="auto"
+                  preload="metadata"
                   className="aspect-square w-full object-cover"
                 />
               </div>
@@ -353,7 +367,10 @@ export function ProductShowcase() {
         <div className="sc-device sc-panel relative flex items-center py-24 lg:invisible lg:absolute lg:inset-0 lg:py-0">
           <div className="container grid w-full items-center gap-10 lg:grid-cols-2 lg:gap-16">
             <PanelText meta={DEVICE} />
-            <div className="group relative mx-auto aspect-square w-full max-w-[560px] cursor-grab overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-50 via-white to-slate-100 active:cursor-grabbing [&_canvas]:!cursor-[inherit]">
+            <div
+              ref={deviceRef}
+              className="group relative mx-auto aspect-square w-full max-w-[560px] cursor-grab overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-50 via-white to-slate-100 active:cursor-grabbing [&_canvas]:!cursor-[inherit]"
+            >
               {showSpline && (
                 <SplineDevice className="absolute inset-0 h-full w-full" />
               )}

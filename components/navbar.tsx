@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Menu, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -8,11 +9,11 @@ import { Logo } from "@/components/logo";
 import { cn } from "@/lib/utils";
 
 const links = [
-  { label: "Home", href: "#home" },
-  { label: "Product", href: "#product" },
-  { label: "Features", href: "#key-features" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Reviews", href: "#testimonials" },
+  { label: "Home", href: "/" },
+  { label: "Product", href: "/#product" },
+  { label: "Features", href: "/#key-features" },
+  { label: "MinuteX Device", href: "/device" },
+  { label: "Pricing", href: "/pricing" },
 ];
 
 export function Navbar() {
@@ -41,13 +42,13 @@ export function Navbar() {
 
         <nav className="hidden items-center gap-1 md:flex">
           {links.map((l) => (
-            <a
+            <Link
               key={l.label}
               href={l.href}
               className="rounded-full px-4 py-2 text-sm font-semibold text-ink transition-colors hover:text-brand"
             >
               {l.label}
-            </a>
+            </Link>
           ))}
         </nav>
 
@@ -73,14 +74,14 @@ export function Navbar() {
         style={{ width: "min(100% - 1.5rem, 72rem)" }}
       >
         {links.map((l) => (
-          <a
+          <Link
             key={l.label}
             href={l.href}
             onClick={() => setOpen(false)}
             className="block rounded-2xl px-4 py-3 text-sm font-medium text-ink-muted hover:bg-brand-50 hover:text-ink"
           >
             {l.label}
-          </a>
+          </Link>
         ))}
         <div className="p-2">
           <Button className="w-full">Get Started</Button>
