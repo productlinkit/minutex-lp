@@ -49,6 +49,13 @@ export function SplineDevice({
         scene="https://prod.spline.design/qi0HJUmDijmJFzTC/scene.splinecode"
         className={className}
         zoom={zoom}
+        onReady={(app) => {
+          // The model is authored facing away from the camera, so it opens on
+          // its back (charging pins). Turn it 180° to show the front — screen
+          // and MinuteX logo — by default.
+          const model = app.findObjectByName("3D Voice Recorder Model");
+          if (model) model.rotation.y += Math.PI;
+        }}
       />
     </SplineBoundary>
   );
