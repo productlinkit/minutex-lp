@@ -1,5 +1,6 @@
 import { Reveal } from "@/components/reveal";
 import { Logo } from "@/components/logo";
+import { StoreBadges } from "@/components/app-download";
 
 const columns = [
   {
@@ -31,13 +32,15 @@ export function Footer() {
           </h2>
         </Reveal>
 
-        <div className="mt-20 grid gap-10 border-t border-white/60 pt-12 md:grid-cols-[1.4fr_repeat(4,1fr)]">
+        <div className="mt-20 grid gap-10 border-t border-white/60 pt-12 md:grid-cols-[1.7fr_repeat(4,1fr)]">
           <div>
             <Logo />
             <p className="mt-4 max-w-xs text-[13px] leading-relaxed text-ink-muted">
               The AI meeting notetaker for web, mobile, and in-person — capturing
               every word so your team can stay present.
             </p>
+
+            <StoreBadges className="mt-6" />
           </div>
           {columns.map((col) => (
             <div key={col.title}>
